@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi-Agent RAG NL-to-SQL Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .section {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    pre {
+      background: #f7f7f7;
+      padding: 8px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Multi-Agent RAG System for NL-to-SQL</h1>
+
+  <div>
+    <label for="question">Enter your question:</label><br />
+    <textarea id="question" placeholder="e.g., What is the total sales in Q1 2023?"></textarea><br />
+    <button onclick="ask()">Ask</button>
+  </div>
+
+  <div id="response" style="display:none;">
+    <div class="section">
+      <h3>Answer</h3>
+      <p id="answer"></p>
+    </div>
+
+    <div class="section">
+      <h3>Intermediate Steps</h3>
+      <h4>Schema Used</h4>
+      <pre id="schema"></pre>
+
+      <h4>Generated SQL</h4>
+      <pre id="sql"></pre>
+
+      <h4>Result Rows</h4>
+      <pre id="rows"></pre>
+    </div>
+
+    <div class="section" id="error-section" style="display:none;">
+      <h3>Error</h3>
+      <pre id="error"></pre>
+    </div>
+  </div>
+
+  <script>
+    async function ask() {
+      const question = document.getElementById('question').value.trim();
+      if (!question) {
+        alert("Please enter a question.");
+        return;
+      }
+
+      const apiUrl = "http://localhost:8000/ask"; // adjust if needed
+
+      const resElem = document.getElementById('response');
+      const answerElem = document.getElementById('answer');
+      const schemaElem = document.getElementById('schema');
+      const sqlElem = document.getElementById('sql');
+      const rowsElem = document.getElementById('rows');
+      const errorSection = document.getElementById('error-section');
+      const errorElem = document.getElementById('error');
+
+      answerElem.textContent = "Loading...";
+      schemaElem.textContent = "";
+      sqlElem.textContent = "";
+      rowsElem.textContent = "";
+      errorSection.style.display = "none";
+      resElem.style.display = "block";
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question }),
+        });
+
+        const data = await response.json();
+
+        answerElem.textContent = data.answer || "";
+        schemaElem.textContent = JSON.stringify(data.steps?.schema_used, null, 2);
+        sqlElem.textContent = data.steps?.generated_sql || "";
+        rowsElem.textContent = JSON.stringify(data.steps?.result_rows, null, 2);
+
+        if (data.error) {
+          errorSection.style.display = "block";
+          errorElem.textContent = data.error;
+        }
+      } catch (err) {
+        errorSection.style.display = "block";
+        errorElem.textContent = err.toString();
+      }
+    }
+  </script>
+</body>
+</html>
