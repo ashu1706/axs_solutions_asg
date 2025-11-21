@@ -3,7 +3,7 @@ from datetime import date, timedelta
 import psycopg2
 from faker import Faker
 
-# 🔧 Adjust DB credentials as needed
+
 DB_NAME = "ragdb"
 DB_USER = "postgres"
 DB_PASSWORD = "yourpassword"
